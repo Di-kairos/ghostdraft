@@ -10,6 +10,23 @@
 > (черновик в открытом vault / на RAM-диске → `$EDITOR` → shred + чистка editor-следов
 > по выходу), включая опциональный `--clipboard` (опасно, с подтверждением + авто-очистка).
 
+## Установка
+
+Checksum-verified установка с релизного тега — verify-then-run:
+
+```bash
+curl -fsSLO https://github.com/Di-kairos/ghostdraft/releases/latest/download/install.sh
+curl -fsSLO https://github.com/Di-kairos/ghostdraft/releases/latest/download/SHA256SUMS
+shasum -a 256 -c SHA256SUMS --ignore-missing   # проверить сам install.sh
+less install.sh                                  # прочитать глазами
+bash install.sh                                  # тянет ghostdraft + сумму, проверяет, ставит
+```
+
+`install.sh` тянет бинарь и `SHA256SUMS` из неизменного релизного тега и проверяет хеш
+**до** установки. Переменные: `GHOSTDRAFT_VERSION`, `GHOSTDRAFT_DEST`, `GHOSTDRAFT_BASE_URL`.
+
+> Репозиторий пока приватный — публичная установка станет доступна после открытия репо.
+
 ## Использование
 
 ```bash

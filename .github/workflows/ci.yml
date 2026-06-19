@@ -10,7 +10,7 @@ jobs:
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y bats shellcheck
       - name: Lint
-        run: shellcheck ghostdraft tools/vendor-common.sh
+        run: shellcheck ghostdraft install.sh tools/vendor-common.sh
       - name: Vendored common is in sync with pinned securetrash
         run: ./tools/vendor-common.sh --check
       - name: Unit tests
