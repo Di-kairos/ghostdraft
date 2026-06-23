@@ -49,7 +49,8 @@ the source for forks/tests).
 > does **not** defend against an attacker who rewrites *both* (the release itself). For
 > authenticity you need a signature / Homebrew.
 
-> The repository is still private — public install becomes available once the repo is opened.
+> The current public release is **v0.1.1** (signed, with `install.sh` + `SHA256SUMS`).
+> Pin it for reproducibility with `GHOSTDRAFT_VERSION=0.1.1` instead of `latest`.
 
 ## Usage
 
