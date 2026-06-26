@@ -101,8 +101,10 @@ Describe 'i18n' {
 
 Describe 'CLI surface (child pwsh)' {
     It 'prints the version' {
+        # Версия-агностично: не хардкодим число (иначе тест рвётся на каждом bump) —
+        # проверяем формат `ghostdraft <semver> (Windows, beta)`.
         $out = & pwsh -NoProfile -File $script:ScriptPath version
-        ($out -join "`n") | Should -Match 'ghostdraft 0\.1\.3'
+        ($out -join "`n") | Should -Match 'ghostdraft \d+\.\d+\.\d+ \(Windows, beta\)'
     }
     It 'pipe echoes stdin and writes nothing to disk' {
         $out = 'top-secret-seed' | & pwsh -NoProfile -File $script:ScriptPath pipe
