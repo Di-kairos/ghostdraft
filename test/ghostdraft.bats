@@ -138,6 +138,28 @@ SH
   rm -rf "$work"
 }
 
+@test "default vim shows a simple exit (F2 save, F3 discard, always-visible statusline)" {
+  work="$(mktemp -d)"; bin="$work/bin"; mkdir -p "$bin"
+  cat > "$bin/vim" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" > "$VIM_ARGS"
+for f; do :; done
+printf 'DRAFT-CONTENT' > "$f"
+SH
+  chmod +x "$bin/vim"
+  export VIM_ARGS="$work/vimargs"
+  run env -u EDITOR PATH="$bin:$PATH" GHOSTDRAFT_DIR="$work/d" bash "$SCRIPT" new
+  [ "$status" -eq 0 ]
+  run cat "$VIM_ARGS"
+  # один-клавишный выход из обоих режимов + всегда видимая подсказка
+  [[ "$output" == *"laststatus=2"* ]]
+  [[ "$output" == *"statusline="* ]]
+  [[ "$output" == *"nnoremap <F2> :wq<CR>"* ]]
+  [[ "$output" == *"inoremap <F2> <Esc>:wq<CR>"* ]]
+  [[ "$output" == *"<F3> :q!<CR>"* ]]
+  rm -rf "$work"
+}
+
 @test "new falls back to default when \$EDITOR is whitespace-only (no exec of the draft)" {
   work="$(mktemp -d)"; bin="$work/bin"; mkdir -p "$bin"
   cat > "$bin/vim" <<'SH'
