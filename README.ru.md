@@ -11,9 +11,10 @@
 [![CI](https://github.com/Di-kairos/ghostdraft/actions/workflows/ci.yml/badge.svg)](https://github.com/Di-kairos/ghostdraft/actions/workflows/ci.yml)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![platform](https://img.shields.io/badge/platform-macOS-blue)
+![windows](https://img.shields.io/badge/Windows-beta-orange)
 ![shellcheck](https://img.shields.io/badge/shellcheck-passing-brightgreen)
 
-> **Статус: ранний (v0.1.3).** Готовы `pipe` (просмотр без записи на диск) и `new`
+> **Статус: ранний (v0.1.6).** Готовы `pipe` (просмотр без записи на диск) и `new`
 > (черновик в открытом vault / на RAM-диске → `$EDITOR` → shred + чистка editor-следов
 > по выходу), включая опциональный `--clipboard` (опасно, с подтверждением + авто-очистка).
 
@@ -47,8 +48,8 @@ curl -fsSL https://github.com/Di-kairos/ghostdraft/releases/latest/download/inst
 > `main`. Но и сумма, и бинарь приходят по одному каналу: от подмены *самого* релиза
 > (переписаны оба) это не защищает. Для подлинности нужна подпись / Homebrew.
 
-> Текущий публичный релиз — **v0.1.3** (подписан, с `install.sh` + `SHA256SUMS`).
-> Для воспроизводимости фиксируй его: `GHOSTDRAFT_VERSION=0.1.3` вместо `latest`.
+> Текущий публичный релиз — **v0.1.6** (подписан, с `install.sh` + `SHA256SUMS`).
+> Для воспроизводимости фиксируй его: `GHOSTDRAFT_VERSION=0.1.6` вместо `latest`.
 
 ## Использование
 
