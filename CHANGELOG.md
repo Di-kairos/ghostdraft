@@ -5,13 +5,16 @@
 
 ## [Unreleased]
 
+## [0.1.7] — 2026-07-04
+
+### Added
+- **Windows-инсталлятор проверяет Ed25519-подпись релиза** (fail-closed; отказ
+  разрешён только при отсутствии верификатора/подписи — через `PT_ALLOW_HASH_ONLY=1`).
+
 ### Changed
-- **Подсказка выхода из vim — клавиатурный путь вперёд (Esc → ZZ/ZQ), F-клавиши понижены.**
-  Live-тест выявил: терминалы (Warp) перехватывают `F2`/`F3` до vim, и новичок всё равно
-  застревал, видя в лаунчере только `:wq` (сохранить), но не «выйти без сохранения». Теперь
-  statusline ведёт с `Esc` → `ZZ` (save) / `ZQ` (discard), а `F2`/`F3` — как бонус «если
-  терминал пропускает». README (EN/RU) дополнен секцией «как выйти из vim». F-маппинги
-  сохранены, поведение шреда не тронуто.
+- Исправления version-drift; в RU-README добавлен бейдж бета-статуса Windows;
+  задокументирован `ST_LANG=ru`; упрощённая подсказка выхода из дефолтного vim
+  (Esc → ZZ/ZQ). `.gitignore` теперь покрывает каталоги вывода инструментов.
 
 ## [0.1.6] — 2026-06-27
 
@@ -122,7 +125,8 @@
 - Real-device smoke на macOS: `new` создал RAM-диск, открыл редактор, по выходу сделал
   shred и detach (регрессия subshell-leak покрыта).
 
-[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.3...v0.1.4

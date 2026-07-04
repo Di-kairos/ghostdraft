@@ -14,7 +14,7 @@ left in the usual places (`~/.*_history`, tmp, recent docs, editor backups/vimin
 ![windows](https://img.shields.io/badge/Windows-beta-orange)
 ![shellcheck](https://img.shields.io/badge/shellcheck-passing-brightgreen)
 
-> **Status: early (v0.1.6).** `pipe` (view without writing to disk) and `new` (a draft
+> **Status: early (v0.1.7).** `pipe` (view without writing to disk) and `new` (a draft
 > in an open vault / RAM disk → `$EDITOR` → shred + clean editor traces on exit) are
 > ready, including the optional `--clipboard` (dangerous, gated behind confirmation +
 > auto-clear).
@@ -50,8 +50,8 @@ the source for forks/tests).
 > does **not** defend against an attacker who rewrites *both* (the release itself). For
 > authenticity you need a signature / Homebrew.
 
-> The current public release is **v0.1.6** (signed, with `install.sh` + `SHA256SUMS`).
-> Pin it for reproducibility with `GHOSTDRAFT_VERSION=0.1.6` instead of `latest`.
+> The current public release is **v0.1.7** (signed, with `install.sh` + `SHA256SUMS`).
+> Pin it for reproducibility with `GHOSTDRAFT_VERSION=0.1.7` instead of `latest`.
 
 ## Usage
 
