@@ -13,10 +13,15 @@
 #   pwsh -File install.ps1
 #
 # Переменные окружения:
-#   GHOSTDRAFT_VERSION     — конкретный тег (напр. 0.1.3). По умолчанию latest.
+#   GHOSTDRAFT_VERSION     — конкретный тег (напр. 0.1.6). По умолчанию latest.
 #   GHOSTDRAFT_BASE_URL    — источник целиком: http(s) URL ИЛИ локальный каталог (тесты/форки).
 #   GHOSTDRAFT_INSTALL_DIR — каталог установки. По умолчанию %LOCALAPPDATA%\Programs\ghostdraft.
 #   GHOSTDRAFT_SKIP_PATH   — '1' пропускает правку PATH (для тестов).
+#   PT_ALLOW_HASH_ONLY     — '1' разрешает установку по одной SHA256, если подпись релиза
+#                            недоступна (нет .sig ИЛИ нет ssh-keygen). ПЛОХАЯ подпись всё равно
+#                            фатальна. Громкое предупреждение. Только для старых/форк-релизов.
+#   GHOSTDRAFT_SIGNING_PUBKEY — переопределяет вшитый release-pubkey (форки/тесты).
+#   GHOSTDRAFT_SSH_KEYGEN     — путь/имя ssh-keygen (по умолчанию 'ssh-keygen'; для тестов).
 #
 # ВНИМАНИЕ: BETA-порт. Логика проверена через Pester (внешние эффекты мокаются);
 # поведение на широком парке Windows-консолей/локалей/editor'ов не обкатано.
@@ -85,6 +90,75 @@ try {
         exit 1
     }
     Write-Host 'Checksum OK.'
+
+    # --- Проверка ПОДПИСИ релиза (аутентичность поверх целостности) ---
+    # Релизы подписаны выделенным ed25519-ключом экосистемы (ssh-keygen -Y sign, namespace 'file').
+    # Pubkey вшит ниже (тот же, что в install.sh). Fail-closed:
+    #   - нет ssh-keygen ИЛИ нет .sig → отказ, если только PT_ALLOW_HASH_ONLY=1 (громкий warn);
+    #   - .sig есть и НЕ сошёлся → ЖЁСТКИЙ отказ ВСЕГДА (активный признак подмены; hash-only не спасает).
+    $ReleaseSigningPubkey = if ($env:GHOSTDRAFT_SIGNING_PUBKEY) { $env:GHOSTDRAFT_SIGNING_PUBKEY } else {
+        'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICb2nz4EliRJIU0ExeF41klE/zlyo7XFY119mfzscn2U'
+    }
+    $SignPrincipal = 'releases@paranoid-tools'
+    $HashOnly = ($env:PT_ALLOW_HASH_ONLY -eq '1')
+    $KeygenName = if ($env:GHOSTDRAFT_SSH_KEYGEN) { $env:GHOSTDRAFT_SSH_KEYGEN } else { 'ssh-keygen' }
+    $Keygen = Get-Command $KeygenName -ErrorAction SilentlyContinue
+
+    if (-not $Keygen) {
+        # ssh-keygen недоступен → подпись проверить нечем.
+        if ($HashOnly) {
+            Write-Warning 'ssh-keygen недоступен — подпись релиза НЕ проверена (PT_ALLOW_HASH_ONLY=1, только целостность по SHA256).'
+        } else {
+            Write-Error 'ssh-keygen недоступен — не могу проверить подпись релиза. Установи OpenSSH (Add-WindowsCapability OpenSSH.Client) или, для старого/неподписанного релиза, запусти с PT_ALLOW_HASH_ONLY=1 (только целостность).'
+            exit 1
+        }
+    } else {
+        $tmpSig = Join-Path $Tmp 'SHA256SUMS.sig'
+        $haveSig = $false
+        try {
+            Get-ReleaseFile -Name 'SHA256SUMS.sig' -OutFile $tmpSig
+            $haveSig = (Test-Path $tmpSig)
+        } catch {
+            $haveSig = $false
+        }
+        if (-not $haveSig) {
+            # У релиза нет .sig.
+            if ($HashOnly) {
+                Write-Warning 'Подпись релиза (SHA256SUMS.sig) отсутствует — продолжаю (PT_ALLOW_HASH_ONLY=1, только целостность по SHA256).'
+            } else {
+                Write-Error 'Подпись релиза (SHA256SUMS.sig) отсутствует — установка прервана. Релизы подписаны; для старого/неподписанного релиза: PT_ALLOW_HASH_ONLY=1.'
+                exit 1
+            }
+        } else {
+            $allowedSigners = Join-Path $Tmp 'allowed_signers'
+            Set-Content -LiteralPath $allowedSigners -Value ("$SignPrincipal namespaces=`"file`" $ReleaseSigningPubkey") -NoNewline
+            Write-Host 'Verifying release signature...'
+            # ssh-keygen -Y verify читает подписанные данные (SHA256SUMS) из stdin. Кормим ТОЧНЫЕ
+            # байты файла через .NET Process (пайп PowerShell / Start-Process перекодировали бы
+            # контент → 'incorrect signature'); копируем сырой поток файла в stdin.
+            $psi = New-Object System.Diagnostics.ProcessStartInfo
+            $psi.FileName = $Keygen.Source
+            foreach ($a in @('-Y','verify','-f',$allowedSigners,'-I',$SignPrincipal,'-n','file','-s',$tmpSig)) {
+                $psi.ArgumentList.Add($a)
+            }
+            $psi.RedirectStandardInput  = $true
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError  = $true
+            $psi.UseShellExecute        = $false
+            $proc = [System.Diagnostics.Process]::Start($psi)
+            $fs = [System.IO.File]::OpenRead($tmpSums)
+            try { $fs.CopyTo($proc.StandardInput.BaseStream) } finally { $fs.Close() }
+            $proc.StandardInput.Close()
+            $proc.WaitForExit()
+            if ($proc.ExitCode -eq 0) {
+                Write-Host 'Signature OK (authenticity verified).'
+            } else {
+                # Плохая подпись — фатально ВСЕГДА, PT_ALLOW_HASH_ONLY не обходит.
+                Write-Error 'Подпись релиза НЕ прошла проверку — установка прервана (возможна подмена).'
+                exit 1
+            }
+        }
+    }
 
     # Хеш верный → устанавливаем.
     if (-not (Test-Path $InstallDir)) {
