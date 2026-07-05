@@ -5,6 +5,18 @@ setup() {
   # тесты падали бы на Linux-CI. macOS-примитивы (hdiutil/diskutil) тесты не трогают.
   STUBS="${BATS_TEST_DIRNAME}/stubs"
   export PATH="$STUBS:$PATH"
+  # bats-раннер не TTY; редактор в тестах замокан (не интерактивный), поэтому обходим
+  # интерактивный-терминал guard из cmd_new. Тест этого guard'а снимает переменную явно.
+  export GD_ASSUME_TTY=1
+}
+
+@test "new refuses in a non-interactive terminal instead of hanging the editor" {
+  work="$(mktemp -d)"; bin="$work/bin"; mkdir -p "$bin"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$bin/vim"; chmod +x "$bin/vim"   # стаб, чтобы RED не завис на настоящем vim
+  run env -u EDITOR -u GD_ASSUME_TTY PATH="$bin:$STUBS:$PATH" GHOSTDRAFT_DIR="$work/d" bash "$SCRIPT" new </dev/null
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"interactive terminal"* ]] || [[ "$output" == *"интерактивный"* ]]
+  rm -rf "$work"
 }
 
 @test "version prints semver" {

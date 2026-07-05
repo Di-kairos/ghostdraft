@@ -172,6 +172,8 @@ EOF
     ru:new_no_loc) printf 'Нет безопасного места: vault не открыт, RAM-диск создать не удалось. Отказываюсь писать в /tmp на диске (APFS). Открой vault: securetrash vault open.' ;;
     en:new_residue) printf 'Draft shredded and editor backups cleaned. CANNOT scrub: terminal scrollback, OS swap, and ~/.viminfo (registers/last yank) — handle those yourself.' ;;
     ru:new_residue) printf 'Черновик удалён, editor-бэкапы вычищены. НЕ могу вычистить: scrollback терминала, swap ОС и ~/.viminfo (регистры/последний yank) — это на тебе.' ;;
+    en:new_needs_tty) printf 'ghostdraft opens a text editor and needs an interactive terminal. Open a real terminal tab (Terminal / iTerm / Warp) and run it there — NOT through a pipe, a non-interactive runner, or an embedded command box (the editor would open but never receive your keystrokes).' ;;
+    ru:new_needs_tty) printf 'ghostdraft открывает текстовый редактор и требует интерактивный терминал. Открой настоящую вкладку терминала (Terminal / iTerm / Warp) и запусти там — НЕ через пайп, не в неинтерактивном раннере и не во встроенном командном поле (редактор откроется, но не получит нажатия клавиш).' ;;
     en:clip_danger) printf 'DANGER: --clipboard copies the secret to the system clipboard. Clipboard managers may keep a copy, and iCloud Universal Clipboard syncs it to your other devices. Auto-clear cannot undo a copy already taken.' ;;
     ru:clip_danger) printf 'ОПАСНО: --clipboard кладёт секрет в системный буфер. Clipboard-менеджеры могут сохранить копию, а iCloud Universal Clipboard синкает его на твои другие устройства. Авто-очистка НЕ отменяет уже снятую копию.' ;;
     en:clip_confirm) printf 'Copy to clipboard anyway?' ;;
@@ -340,6 +342,13 @@ _gd_cleanup() {
 
 cmd_new() {
   require_macos
+  # Редактору нужен интерактивный терминал. В пайпе / неинтерактивном раннере / встроенном
+  # командном окне vim(nano) откроется, но клавиатура до него не дойдёт — пользователь застревает
+  # в неуправляемом редакторе. Fail-closed с подсказкой ДО создания RAM-диска/черновика.
+  # GD_ASSUME_TTY=1 — обход для тестов (редактор там замокан не-интерактивным).
+  if [[ "${GD_ASSUME_TTY:-0}" != "1" && ( ! -t 0 || ! -t 1 ) ]]; then
+    err "$(t new_needs_tty)"; exit 1
+  fi
   local use_clip=0 a
   for a in "$@"; do
     case "$a" in
