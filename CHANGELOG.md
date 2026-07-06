@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.1.9] — 2026-07-06
+
 ### Added
 - **Подсказка при запуске в Warp.** Warp — настоящий TTY (не ловится не-TTY guard'ом), но его
   AI-попап («Use agent / Dismiss») перехватывает фокус, а F-клавиши он биндит под себя → ввод не
@@ -144,7 +146,8 @@
 - Real-device smoke на macOS: `new` создал RAM-диск, открыл редактор, по выходу сделал
   shred и detach (регрессия subshell-leak покрыта).
 
-[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.8...HEAD
+[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.9...HEAD
+[0.1.9]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.5...v0.1.6
