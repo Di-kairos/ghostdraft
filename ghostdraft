@@ -174,6 +174,8 @@ EOF
     ru:new_residue) printf 'Черновик удалён, editor-бэкапы вычищены. НЕ могу вычистить: scrollback терминала, swap ОС и ~/.viminfo (регистры/последний yank) — это на тебе.' ;;
     en:new_needs_tty) printf 'ghostdraft opens a text editor and needs an interactive terminal. Open a real terminal tab (Terminal / iTerm / Warp) and run it there — NOT through a pipe, a non-interactive runner, or an embedded command box (the editor would open but never receive your keystrokes).' ;;
     ru:new_needs_tty) printf 'ghostdraft открывает текстовый редактор и требует интерактивный терминал. Открой настоящую вкладку терминала (Terminal / iTerm / Warp) и запусти там — НЕ через пайп, не в неинтерактивном раннере и не во встроенном командном поле (редактор откроется, но не получит нажатия клавиш).' ;;
+    en:new_warp_hint) printf 'Warp detected. Its AI popup ("Use agent / Dismiss") and its F-key bindings can steal keystrokes from the editor — if typing does nothing, press Esc to dismiss the popup, then click into the editor. To exit vim: Esc then ZZ (save) or ZQ (discard). If it stays stuck, use Terminal.app or iTerm instead.' ;;
+    ru:new_warp_hint) printf 'Обнаружен Warp. Его AI-попап («Use agent / Dismiss») и биндинги F-клавиш могут перехватывать ввод у редактора — если печать не работает, нажми Esc чтобы закрыть попап, затем кликни в редактор. Выход из vim: Esc, потом ZZ (сохранить) или ZQ (отменить). Если всё равно застрял — открой Terminal.app или iTerm.' ;;
     en:clip_danger) printf 'DANGER: --clipboard copies the secret to the system clipboard. Clipboard managers may keep a copy, and iCloud Universal Clipboard syncs it to your other devices. Auto-clear cannot undo a copy already taken.' ;;
     ru:clip_danger) printf 'ОПАСНО: --clipboard кладёт секрет в системный буфер. Clipboard-менеджеры могут сохранить копию, а iCloud Universal Clipboard синкает его на твои другие устройства. Авто-очистка НЕ отменяет уже снятую копию.' ;;
     en:clip_confirm) printf 'Copy to clipboard anyway?' ;;
@@ -348,6 +350,12 @@ cmd_new() {
   # GD_ASSUME_TTY=1 — обход для тестов (редактор там замокан не-интерактивным).
   if [[ "${GD_ASSUME_TTY:-0}" != "1" && ( ! -t 0 || ! -t 1 ) ]]; then
     err "$(t new_needs_tty)"; exit 1
+  fi
+  # Warp — настоящий TTY (guard выше проходит), но его AI-попап («Use agent») перехватывает
+  # фокус, а F-клавиши он биндит под себя → ввод не доходит до редактора, newbie застревает.
+  # Не фатально: печатаем разовую подсказку (Esc закрыть попап / выход Esc→ZZ/ZQ / уйти в iTerm).
+  if [[ "${TERM_PROGRAM:-}" == "WarpTerminal" ]]; then
+    warn "$(t new_warp_hint)"
   fi
   local use_clip=0 a
   for a in "$@"; do

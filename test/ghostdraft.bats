@@ -19,6 +19,25 @@ setup() {
   rm -rf "$work"
 }
 
+@test "new warns about Warp key/focus interception when TERM_PROGRAM=WarpTerminal" {
+  work="$(mktemp -d)"; ed="$work/ed"; _fake_editor "$ed"
+  export GD_EDITED_PATH="$work/edited" GD_EDITED_MODE="$work/mode"
+  run env TERM_PROGRAM=WarpTerminal GHOSTDRAFT_DIR="$work/draftdir" EDITOR="$ed" bash "$SCRIPT" new
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Warp"* ]]
+  [[ "$output" == *"Esc"* ]]
+  rm -rf "$work"
+}
+
+@test "new does NOT print the Warp hint under a normal terminal" {
+  work="$(mktemp -d)"; ed="$work/ed"; _fake_editor "$ed"
+  export GD_EDITED_PATH="$work/edited" GD_EDITED_MODE="$work/mode"
+  run env -u TERM_PROGRAM GHOSTDRAFT_DIR="$work/draftdir" EDITOR="$ed" bash "$SCRIPT" new
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"Use agent"* ]]
+  rm -rf "$work"
+}
+
 @test "version prints semver" {
   run bash "$SCRIPT" version
   [ "$status" -eq 0 ]
