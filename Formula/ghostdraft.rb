@@ -1,8 +1,8 @@
 class Ghostdraft < Formula
   desc "Ephemeral scratch draft on macOS, kept in a RAM disk not on-disk temp"
   homepage "https://github.com/Di-kairos/ghostdraft"
-  url "https://github.com/Di-kairos/ghostdraft/archive/refs/tags/v0.1.7.tar.gz"
-  sha256 "6a4ef325c159c204b36a65ab99f8ea4d6c561828bffb313abb402f99e19a5b7f"
+  url "https://github.com/Di-kairos/ghostdraft/archive/refs/tags/v0.1.8.tar.gz"
+  sha256 "5aca2468bbe7f546aa817844b693fb2241e9b52a5955e2fd89741820e07dd8f1"
   license "MIT"
 
   def install
