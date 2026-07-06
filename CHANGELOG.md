@@ -5,6 +5,18 @@
 
 ## [Unreleased]
 
+## [0.1.8] — 2026-07-06
+
+### Fixed
+- **`new` теперь честно отказывает в неинтерактивном терминале вместо зависания.**
+  `new` запускает редактор (`vim`/`nano`), которому нужен интерактивный TTY. При запуске
+  через пайп, неинтерактивный раннер или встроенное командное поле редактор открывался, но
+  клавиши до него не доходили — пользователь застревал в неуправляемом `vim` без возможности
+  ввести текст или выйти (`Esc`/`ZZ` тоже не проходили). `cmd_new` теперь fail-closed **до**
+  создания RAM-диска/черновика: если `stdin`/`stdout` не TTY — печатает подсказку
+  «открой настоящую вкладку терминала, не пайп/встроенное поле» и выходит с кодом 1.
+  `GD_ASSUME_TTY=1` — обход для тестового харнесса. bats 30 → 31.
+
 ## [0.1.7] — 2026-07-04
 
 ### Added
@@ -125,7 +137,8 @@
 - Real-device smoke на macOS: `new` создал RAM-диск, открыл редактор, по выходу сделал
   shred и detach (регрессия subshell-leak покрыта).
 
-[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.4...v0.1.5
