@@ -80,6 +80,67 @@ Describe 'ghostdraft new — on-disk fallback (no vault)' {
     }
 }
 
+# AUDIT_2026-08-03 P0-3: securetrash.ps1 монтирует VHDX на первую свободную букву и пишет
+# её в sidecar <vault>.mount — ghostdraft обязан читать его, а не надеяться на 'V:\'.
+Describe 'vault volume resolution (mount sidecar)' {
+    BeforeEach {
+        Remove-Item Env:\ST_VAULT_VOLUME -ErrorAction SilentlyContinue
+        Remove-Item Env:\ST_VAULT_PATH -ErrorAction SilentlyContinue
+        Remove-Item Env:\GHOSTDRAFT_DIR -ErrorAction SilentlyContinue
+        $script:FakeVault = Join-Path ([System.IO.Path]::GetTempPath()) ("gd_v_" + [Guid]::NewGuid().ToString('N') + '.vhdx')
+        # Файл контейнера существует — иначе Test-GdVaultAttached честно бракует sidecar.
+        Set-Content -LiteralPath $script:FakeVault -Value 'vhdx-stub' -NoNewline
+    }
+    AfterEach {
+        Remove-Item -LiteralPath $script:FakeVault -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath "$script:FakeVault.mount" -Force -ErrorAction SilentlyContinue
+        Remove-Item Env:\ST_VAULT_VOLUME -ErrorAction SilentlyContinue
+        Remove-Item Env:\ST_VAULT_PATH -ErrorAction SilentlyContinue
+    }
+
+    It 'reads the actual drive letter from the <vault>.mount sidecar' {
+        $env:ST_VAULT_PATH = $script:FakeVault
+        Set-Content -LiteralPath "$script:FakeVault.mount" -Value 'D:\' -NoNewline
+        Get-GdVaultVolume | Should -Be 'D:\'
+    }
+
+    It 'ST_VAULT_VOLUME env override wins over the sidecar' {
+        $env:ST_VAULT_PATH = $script:FakeVault
+        Set-Content -LiteralPath "$script:FakeVault.mount" -Value 'D:\' -NoNewline
+        $env:ST_VAULT_VOLUME = 'X:\'
+        Get-GdVaultVolume | Should -Be 'X:\'
+    }
+
+    It 'falls back to the legacy V:\ default without a sidecar' {
+        $env:ST_VAULT_PATH = $script:FakeVault
+        Get-GdVaultVolume | Should -Be 'V:\'
+    }
+
+    It 'stale sidecar without the vault container is ignored (hint, not proof)' {
+        $env:ST_VAULT_PATH = $script:FakeVault
+        Set-Content -LiteralPath "$script:FakeVault.mount" -Value 'D:\' -NoNewline
+        Remove-Item -LiteralPath $script:FakeVault -Force   # контейнера больше нет
+        Get-GdVaultVolume | Should -Be 'V:\'
+    }
+
+    It 'sidecar is ignored when the VHDX is not attached (stale letter reuse)' {
+        $env:ST_VAULT_PATH = $script:FakeVault
+        Set-Content -LiteralPath "$script:FakeVault.mount" -Value 'D:\' -NoNewline
+        Mock Test-GdVaultAttached { $false }
+        Get-GdVaultVolume | Should -Be 'V:\'
+    }
+
+    It 'draft location picks the sidecar letter when writable' {
+        $env:ST_VAULT_PATH = $script:FakeVault
+        Set-Content -LiteralPath "$script:FakeVault.mount" -Value 'D:\' -NoNewline
+        Mock Test-GdWritableDir { $false }
+        Mock Test-GdWritableDir { $true } -ParameterFilter { $Path -eq 'D:\' }
+        $loc = Get-GdDraftLocation
+        $loc.Kind | Should -Be 'vault'
+        $loc.Dir  | Should -Be 'D:\'
+    }
+}
+
 Describe 'i18n' {
     It 'returns English residue note by default' {
         $script:GD_LOCALE = 'en'

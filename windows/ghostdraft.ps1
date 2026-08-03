@@ -21,8 +21,38 @@
 $VERSION = '0.1.9'
 
 # --- настраиваемые примитивы (зеркало bash GHOSTDRAFT_*/ST_VAULT_VOLUME) ---
-# Корень открытого vault securetrash (Windows: BitLocker VHDX по умолчанию на V:).
-$script:GD_VAULT_VOLUME = if ($env:ST_VAULT_VOLUME) { $env:ST_VAULT_VOLUME } else { 'V:\' }
+# Корень открытого vault securetrash. securetrash.ps1 монтирует VHDX на ПЕРВУЮ СВОБОДНУЮ
+# букву (не фиксированную V:) и пишет её в sidecar <vault>.mount — читаем его, как это
+# делает windows/paranoid.ps1. Иначе черновик с секретом молча уезжал в on-disk fallback
+# при живом открытом vault (AUDIT_2026-08-03 P0-3). ST_VAULT_VOLUME переопределяет вручную.
+function Get-GdVaultVolume {
+    if ($env:ST_VAULT_VOLUME) { return $env:ST_VAULT_VOLUME }
+    $vaultPath = if ($env:ST_VAULT_PATH) { $env:ST_VAULT_PATH } else {
+        $homeDir = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { $null }
+        if ($homeDir) { Join-Path $homeDir 'SecureVault.vhdx' } else { $null }
+    }
+    if ($vaultPath) {
+        $sidecar = "$vaultPath.mount"
+        try {
+            if (Test-Path -LiteralPath $sidecar) {
+                $m = (Get-Content -LiteralPath $sidecar -Raw -ErrorAction Stop).Trim()
+                # Sidecar — подсказка, не доказательство: он мог пережить грубое отключение,
+                # а букву переиспользовал посторонний том. Доверяем только при attached VHDX.
+                if ($m -and (Test-GdVaultAttached -VaultPath $vaultPath)) { return $m }
+            }
+        } catch { }   # нечитаемый sidecar = подсказки нет; штатный fallback ниже
+    }
+    return 'V:\'   # legacy-дефолт: сейфы, созданные до sidecar'а
+}
+
+# Attached ли VHDX сейчас — best-effort: без Get-DiskImage (не-Windows прогон тестов)
+# или при ошибке опровергнуть не можем → доверяем sidecar'у (не хуже прежней V:\-эвристики).
+function Test-GdVaultAttached {
+    param([string]$VaultPath)
+    if (-not $VaultPath -or -not (Test-Path -LiteralPath $VaultPath)) { return $false }
+    if (-not (Get-Command Get-DiskImage -ErrorAction SilentlyContinue)) { return $true }
+    try { return [bool](Get-DiskImage -ImagePath $VaultPath -ErrorAction Stop).Attached } catch { return $true }
+}
 
 # --- locale: en по умолчанию; ru — если ST_LANG или системная UI-локаль начинаются с 'ru' ---
 function Get-GdLocale {
@@ -150,8 +180,9 @@ function Get-GdDraftLocation {
         New-Item -ItemType Directory -Path $ov -Force -ErrorAction SilentlyContinue | Out-Null
         if (Test-GdWritableDir $ov) { return @{ Dir = $ov; Kind = 'override' } }
     }
-    if (Test-GdWritableDir $script:GD_VAULT_VOLUME) {
-        return @{ Dir = $script:GD_VAULT_VOLUME; Kind = 'vault' }
+    $vaultVol = Get-GdVaultVolume
+    if (Test-GdWritableDir $vaultVol) {
+        return @{ Dir = $vaultVol; Kind = 'vault' }
     }
     $tmp = New-GdSecureTempDir
     return @{ Dir = $tmp; Kind = 'fallback' }
