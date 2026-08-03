@@ -5,6 +5,20 @@
 
 ## [Unreleased]
 
+## [0.1.10] — 2026-08-03
+
+### Fixed
+- **Windows: буква диска сейфа берётся из sidecar `<vault>.mount`, а не из захардкоженного
+  `V:`.** Раньше при другой букве черновик мог уехать не туда — то есть на обычный диск,
+  ровно против назначения инструмента. Доверяем только реально примонтированному VHDX.
+- **`install.sh` fail-closed без `ssh-keygen`** (обход — `ALLOW_UNSIGNED_LEGACY=1`),
+  `type -P` вместо `command -v`.
+
+### Changed
+- Снят клейм про RAM-диск/ImDisk на Windows: код этого не делает, документация теперь
+  совпадает с поведением.
+- README EN+RU: проверка подписи в сниппетах установки, остаточный риск назван.
+
 ## [0.1.9] — 2026-07-06
 
 ### Added
@@ -147,6 +161,7 @@
   shred и detach (регрессия subshell-leak покрыта).
 
 [Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.9...HEAD
+[0.1.10]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.6...v0.1.7
