@@ -175,4 +175,15 @@ Describe 'CLI surface (child pwsh)' {
         & pwsh -NoProfile -File $script:ScriptPath bogus *> $null
         $LASTEXITCODE | Should -Not -Be 0
     }
+    It 'accepts --yes anywhere in the args instead of treating it as a command (P2-12)' {
+        $out = & pwsh -NoProfile -File $script:ScriptPath --yes version
+        $LASTEXITCODE | Should -Be 0
+        ($out -join "`n") | Should -Match 'ghostdraft \d+\.\d+\.\d+'
+        $out = & pwsh -NoProfile -File $script:ScriptPath version --yes
+        $LASTEXITCODE | Should -Be 0
+        ($out -join "`n") | Should -Match 'ghostdraft \d+\.\d+\.\d+'
+    }
+    It 'usage documents the --yes flag' {
+        (Get-GdUsage) | Should -Match '--yes'
+    }
 }

@@ -51,6 +51,29 @@ setup() {
   [[ "$output" == *"ghostdraft"* ]]
 }
 
+@test "--yes is accepted anywhere in the args and does not become a command" {
+  # Контракт securetrash: флаг вырезается, остальные аргументы сохраняют порядок.
+  run bash "$SCRIPT" --yes version
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"ghostdraft"* ]]
+  run bash "$SCRIPT" version --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"ghostdraft"* ]]
+}
+
+@test "--yes alone is not treated as a command (usage, non-zero)" {
+  run bash "$SCRIPT" --yes
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"Usage:"* ]]
+  [[ "$output" != *"Unknown command"* ]]
+}
+
+@test "usage documents the --yes flag" {
+  run bash "$SCRIPT" help
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"--yes"* ]]
+}
+
 @test "-v flag prints version" {
   run bash "$SCRIPT" -v
   [ "$status" -eq 0 ]

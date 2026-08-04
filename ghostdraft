@@ -139,6 +139,9 @@ Commands:
                       (e.g. pbpaste | ghostdraft pipe).
   version             Show the version
 
+Flags:
+  --yes               Skip confirmation prompts (same as ST_ASSUME_YES=1)
+
 ghostdraft does NOT promise "zero traces" where the OS may keep a copy (swap,
 terminal scrollback) — those are listed honestly. --clipboard is OFF by default.
 EOF
@@ -153,6 +156,9 @@ Commands:
   pipe                Читать stdin, печатать в терминал, на диск НЕ писать ничего
                       (напр. pbpaste | ghostdraft pipe).
   version             Показать версию
+
+Флаги:
+  --yes               Не спрашивать подтверждений (то же, что ST_ASSUME_YES=1)
 
 ghostdraft НЕ обещает «ноль следов» там, где ОС может оставить копию (swap,
 scrollback терминала) — перечисляем честно. --clipboard по умолчанию ВЫКЛ.
@@ -420,6 +426,20 @@ cmd_new() {
 }
 
 main() {
+  # --yes где угодно в аргументах == ST_ASSUME_YES=1 (тот же контракт, что у securetrash:
+  # раньше подтверждение очистки буфера обходилось только через env). Флаг вырезаем,
+  # порядок остальных аргументов сохраняем.
+  # После `--` аргументы литеральные — тот же контракт, что у vaultwatch.
+  local args=() a literal=0
+  for a in "$@"; do
+    if [[ "$literal" == 0 && "$a" == "--yes" ]]; then ST_ASSUME_YES=1; continue; fi
+    [[ "$a" == "--" ]] && literal=1
+    args+=("$a")
+  done
+  set -- "${args[@]:-}"
+  # Пустой массив разворачивается в одну пустую строку — нормализуем к «нет аргументов».
+  if [[ $# -eq 1 && -z "${1:-}" ]]; then set --; fi
+
   local cmd="${1:-}"
   if [[ -z "$cmd" ]]; then usage; exit 1; fi
   shift || true

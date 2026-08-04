@@ -141,6 +141,9 @@ Commands:
                       (e.g. Get-Clipboard | ghostdraft pipe).
   version             Show the version
 
+Flags:
+  --yes               Skip confirmation prompts (same as ST_ASSUME_YES=1)
+
 ghostdraft does NOT promise "zero traces" where the OS may keep a copy (pagefile,
 console scrollback) — those are listed honestly. --clipboard is OFF by default.
 '@
@@ -317,6 +320,17 @@ function Invoke-GdVersion { Write-Output "ghostdraft $VERSION (Windows, beta)" }
 function Invoke-GdMain {
     param([string[]]$Argv)
     try {
+        # --yes где угодно в аргументах == ST_ASSUME_YES=1 (контракт securetrash).
+        # После `--` аргументы литеральные (зеркало bash).
+        if ($Argv -and ($Argv -contains '--yes')) {
+            $kept = @(); $literal = $false
+            foreach ($a in $Argv) {
+                if (-not $literal -and $a -eq '--yes') { $env:ST_ASSUME_YES = '1'; continue }
+                if ($a -eq '--') { $literal = $true }
+                $kept += $a
+            }
+            $Argv = $kept
+        }
         $cmd = if ($Argv -and $Argv.Count -ge 1) { $Argv[0] } else { '' }
         if (-not $cmd) { Write-Output (Get-GdUsage); exit 1 }
         $rest = @(if ($Argv.Count -ge 2) { $Argv[1..($Argv.Count - 1)] } else { @() })
