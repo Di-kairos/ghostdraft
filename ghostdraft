@@ -220,7 +220,10 @@ _GD_RAM_DEV=""      # dev-node RAM-диска, если создали мы (д�
 _is_mounted_writable() {
   local vol="$1"
   [[ -n "$vol" && -d "$vol" && -w "$vol" ]] || return 1
-  mount | grep -q " on ${vol} " || mount | grep -q " on ${vol}("
+  # -F обязателен: путь тома — это данные, не регексп. С `.`, `[`, `+` в имени
+  # обычный grep дал бы ложное совпадение (черновик уехал бы не туда) или ложный промах
+  # (ушли бы с настоящего vault на диск).
+  mount | grep -qF " on ${vol} " || mount | grep -qF " on ${vol}("
 }
 
 # Уникальное имя тома RAM-диска: ghostdraft-ram-<8 hex>. Уникальность нужна, чтобы

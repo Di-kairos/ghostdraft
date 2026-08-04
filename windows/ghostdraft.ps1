@@ -232,11 +232,17 @@ function Invoke-GdShred {
     if (-not $Path -or -not (Test-Path -LiteralPath $Path)) { return }
     $st = Get-Command 'securetrash' -ErrorAction SilentlyContinue
     if ($st) {
+        # Значение пользователя сохраняем и возвращаем: раньше finally удалял переменную
+        # целиком, так что ST_ASSUME_YES=1, выставленный вызывающим, пропадал после shred.
+        $prevAssumeYes = $env:ST_ASSUME_YES
         try {
             $env:ST_ASSUME_YES = '1'
             & securetrash shred $Path 2>$null | Out-Null
             if ($LASTEXITCODE -eq 0) { return }
-        } catch { } finally { Remove-Item Env:\ST_ASSUME_YES -ErrorAction SilentlyContinue }
+        } catch { } finally {
+            if ($null -eq $prevAssumeYes) { Remove-Item Env:\ST_ASSUME_YES -ErrorAction SilentlyContinue }
+            else { $env:ST_ASSUME_YES = $prevAssumeYes }
+        }
     }
     try {
         $len = (Get-Item -LiteralPath $Path).Length

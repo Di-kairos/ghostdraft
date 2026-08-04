@@ -187,3 +187,27 @@ Describe 'CLI surface (child pwsh)' {
         (Get-GdUsage) | Should -Match '--yes'
     }
 }
+
+# AUDIT_2026-08-03, P3-хвост: shred через securetrash подставлял ST_ASSUME_YES=1 и в finally
+# УДАЛЯЛ переменную — вместе со значением, которое выставил вызывающий.
+Describe 'Invoke-GdShred — не затирает ST_ASSUME_YES вызывающего' {
+    AfterEach { Remove-Item Env:\ST_ASSUME_YES -ErrorAction SilentlyContinue }
+
+    It 'возвращает прежнее значение после вызова' {
+        $env:ST_ASSUME_YES = '1'
+        $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("gd-" + [Guid]::NewGuid().ToString('N'))
+        Set-Content -LiteralPath $tmp -Value 'draft'
+        try { Invoke-GdShred -Path $tmp 6>$null } catch { }
+        $env:ST_ASSUME_YES | Should -Be '1'
+        Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'не создаёт переменную, если её не было' {
+        Remove-Item Env:\ST_ASSUME_YES -ErrorAction SilentlyContinue
+        $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("gd-" + [Guid]::NewGuid().ToString('N'))
+        Set-Content -LiteralPath $tmp -Value 'draft'
+        try { Invoke-GdShred -Path $tmp 6>$null } catch { }
+        $env:ST_ASSUME_YES | Should -BeNullOrEmpty
+        Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+    }
+}

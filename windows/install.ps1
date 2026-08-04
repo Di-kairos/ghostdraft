@@ -20,7 +20,8 @@
 #   PT_ALLOW_HASH_ONLY     — '1' разрешает установку по одной SHA256, если подпись релиза
 #                            недоступна (нет .sig ИЛИ нет ssh-keygen). ПЛОХАЯ подпись всё равно
 #                            фатальна. Громкое предупреждение. Только для старых/форк-релизов.
-#   GHOSTDRAFT_SIGNING_PUBKEY — переопределяет вшитый release-pubkey (форки/тесты).
+#   GHOSTDRAFT_TEST_SIGNING_PUBKEY — ТОЛЬКО для тестов: подменяет доверенный release-pubkey.
+#     Использование печатает громкое предупреждение — обычной установке эта переменная не нужна.
 #   GHOSTDRAFT_SSH_KEYGEN     — путь/имя ssh-keygen (по умолчанию 'ssh-keygen'; для тестов).
 #
 # ВНИМАНИЕ: BETA-порт. Логика проверена через Pester (внешние эффекты мокаются);
@@ -96,7 +97,12 @@ try {
     # Pubkey вшит ниже (тот же, что в install.sh). Fail-closed:
     #   - нет ssh-keygen ИЛИ нет .sig → отказ, если только PT_ALLOW_HASH_ONLY=1 (громкий warn);
     #   - .sig есть и НЕ сошёлся → ЖЁСТКИЙ отказ ВСЕГДА (активный признак подмены; hash-only не спасает).
-    $ReleaseSigningPubkey = if ($env:GHOSTDRAFT_SIGNING_PUBKEY) { $env:GHOSTDRAFT_SIGNING_PUBKEY } else {
+    # Подмена доверенного ключа — test-only и ГРОМКАЯ: молча доверять чужому ключу значит
+    # обесценить всю проверку подписи (остальные 4 тула такой переменной не имеют вовсе).
+    $ReleaseSigningPubkey = if ($env:GHOSTDRAFT_TEST_SIGNING_PUBKEY) {
+        Write-Warning 'GHOSTDRAFT_TEST_SIGNING_PUBKEY задан: подпись проверяется ЧУЖИМ ключом, а не ключом релизов ghostdraft. Это режим тестов — в обычной установке так быть не должно.'
+        $env:GHOSTDRAFT_TEST_SIGNING_PUBKEY
+    } else {
         'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICb2nz4EliRJIU0ExeF41klE/zlyo7XFY119mfzscn2U'
     }
     $SignPrincipal = 'releases@paranoid-tools'
