@@ -92,7 +92,7 @@ function T {
     $loc = $script:GD_LOCALE
     switch ("${loc}:${Key}") {
         'en:unknown_cmd'    { return "Unknown command: $A" }
-        'ru:unknown_cmd'    { return "Unknown command: $A" }
+        'ru:unknown_cmd'    { return "Неизвестная команда: $A" }
         'en:pipe_scrollback'{ return 'Shown above. Nothing written to disk — but the console buffer still holds it; clear it (close the window / Clear-Host) when done.' }
         'ru:pipe_scrollback'{ return 'Показано выше. На диск ничего не записано — но в буфере консоли текст остаётся; очисти его (закрой окно / Clear-Host), когда закончишь.' }
         'en:new_loc_vault'  { return "Draft inside the open securetrash vault ($A) — encrypted; closing the vault crypto-shreds it." }

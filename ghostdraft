@@ -165,7 +165,7 @@ scrollback терминала) — перечисляем честно. --clipbo
 EOF
       ;;
     en:unknown_cmd) printf 'Unknown command: %s' "$1" ;;
-    ru:unknown_cmd) printf 'Unknown command: %s' "$1" ;;
+    ru:unknown_cmd) printf 'Неизвестная команда: %s' "$1" ;;
     en:pipe_scrollback) printf 'Shown above. Nothing written to disk — but terminal scrollback still holds it; clear it (Cmd-K) when done.' ;;
     ru:pipe_scrollback) printf 'Показано выше. На диск ничего не записано — но в scrollback терминала текст остаётся; очисти его (Cmd-K), когда закончишь.' ;;
     en:new_loc_vault) printf 'Draft inside the open securetrash vault (%s) — encrypted; closing the vault crypto-shreds it.' "$1" ;;
