@@ -82,7 +82,7 @@ variable, also honored by securetrash) — or a `ru*` system locale — to switc
 - Single-file Bash, zero dependencies. Native macOS primitives (`hdiutil` for the RAM disk,
   `$EDITOR`/nano). `new` prefers to write **inside an open securetrash vault**.
 - The shared core (`lib/common.sh`) is **vendored** inline from securetrash, pinned to a
-  git ref; `tools/vendor-common.sh --check` catches drift in CI. See `paranoid-tools/README.md`.
+  git ref; `tools/vendor-common.sh --check` catches drift in CI. See [`paranoid-tools/README.md`](https://github.com/Di-kairos/paranoid-tools#readme).
 
 ## Where `new` writes the draft (by priority)
 
