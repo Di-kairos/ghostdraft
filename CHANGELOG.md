@@ -5,6 +5,22 @@
 
 ## [Unreleased]
 
+## [0.1.12] — 2026-08-05
+
+### Fixed
+- **Соседний том с более длинным именем больше не выдаёт себя за сейф.** Проверка
+  «сейф примонтирован?» искала подстроку `" on /Volumes/Имя "` в таблице монтирования.
+  Пробел внутри имени тома выглядит как разделитель перед опциями, поэтому при
+  смонтированном `/Volumes/Vault Backup` проверка отвечала «да» и для `/Volumes/Vault` —
+  а по этому пути мог лежать обычный каталог. Черновик уезжал не в сейф. Теперь факт
+  монтирования спрашивается у канонического `_volume_mounted`, который сравнивает точку
+  монтирования целиком; ghostdraft оставил себе только проверку права на запись.
+
+### Changed
+- **Перевендорен `securetrash/lib/common.sh`** (пин `221f2c7`): единый на экосистему
+  детект примонтированного тома (`_volume_mounted`) и tri-state FileVault (`_fv_state`:
+  on/off/unknown, `filevault_on` — его двоичная обёртка).
+
 ## [0.1.11] — 2026-08-05
 
 ### Added
@@ -184,7 +200,8 @@
 - Real-device smoke на macOS: `new` создал RAM-диск, открыл редактор, по выходу сделал
   shred и detach (регрессия subshell-leak покрыта).
 
-[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.11...HEAD
+[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.12...HEAD
+[0.1.12]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.8...v0.1.9
