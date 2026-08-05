@@ -394,3 +394,24 @@ SH
   [[ "$output" == *"ДРЕЙФ"* ]] || [[ "$output" == *"drift"* ]]
   rm -rf "$work"
 }
+
+# Структурный P3: «том примонтирован» спрашиваем у канонического _volume_mounted из
+# вендоренного common.sh. Каталог, оставшийся от прошлого монтирования, — не сейф:
+# черновик в него уехал бы на обычный диск, ровно против назначения инструмента.
+@test "_is_mounted_writable refuses a writable directory that is not a mounted volume" {
+  work="$(mktemp -d)"; bin="$work/bin"; mkdir -p "$bin" "$work/Volumes/SecretVault"
+  printf '#!/usr/bin/env bash\necho "/dev/disk1s5 on / (apfs, local)"\n' > "$bin/mount"
+  chmod +x "$bin/mount"
+  run env PATH="$bin:$PATH" bash -c "source '$SCRIPT'; _is_mounted_writable '$work/Volumes/SecretVault' && echo YES || echo NO"
+  [[ "$output" == *"NO"* ]]
+  rm -rf "$work"
+}
+
+@test "_is_mounted_writable accepts a mounted writable volume" {
+  work="$(mktemp -d)"; bin="$work/bin"; mkdir -p "$bin" "$work/Volumes/SecretVault"
+  printf '#!/usr/bin/env bash\necho "/dev/disk4s1 on %s/Volumes/SecretVault (apfs, local, nobrowse)"\n' "$work" > "$bin/mount"
+  chmod +x "$bin/mount"
+  run env PATH="$bin:$PATH" bash -c "source '$SCRIPT'; _is_mounted_writable '$work/Volumes/SecretVault' && echo YES || echo NO"
+  [[ "$output" == *"YES"* ]]
+  rm -rf "$work"
+}
