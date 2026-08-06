@@ -18,7 +18,7 @@
 # BETA: логика покрыта Pester (внешние эффекты — editor/shred/clipboard — мокаются);
 # поведение на реальном железе с экзотическими editor'ами/локалями широко не обкатано.
 
-$VERSION = '0.1.12'
+$VERSION = '0.1.13'
 
 # --- настраиваемые примитивы (зеркало bash GHOSTDRAFT_*/ST_VAULT_VOLUME) ---
 # Корень открытого vault securetrash. securetrash.ps1 монтирует VHDX на ПЕРВУЮ СВОБОДНУЮ

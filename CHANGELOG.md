@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+## [0.1.13] — 2026-08-06
+
+### Fixed
+- **Установщик Windows больше не может тихо повиснуть на проверке подписи.** `stdout`/`stderr`
+  верификатора перенаправлялись, но не вычитывались до `WaitForExit`: `ssh-keygen`, написавший
+  больше буфера трубы, вставал на записи, а установщик ждал его вечно. Молча висящая установка
+  хуже честного отказа. Потоки теперь дренируются асинхронно; регрессия воспроизведена тестом
+  (без дренажа установщик не возвращается).
+
 ## [0.1.12] — 2026-08-05
 
 ### Fixed
@@ -200,7 +209,8 @@
 - Real-device smoke на macOS: `new` создал RAM-диск, открыл редактор, по выходу сделал
   shred и detach (регрессия subshell-leak покрыта).
 
-[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.12...HEAD
+[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.13...HEAD
+[0.1.13]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.9...v0.1.10
