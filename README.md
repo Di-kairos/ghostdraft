@@ -14,7 +14,7 @@ left in the usual places (`~/.*_history`, tmp, recent docs, editor backups/vimin
 ![windows](https://img.shields.io/badge/Windows-beta-orange)
 ![shellcheck](https://img.shields.io/badge/shellcheck-passing-brightgreen)
 
-> **Status: early (v0.1.13).** `pipe` (view without writing to disk) and `new` (a draft
+> **Status: early (v0.1.14).** `pipe` (view without writing to disk) and `new` (a draft
 > in an open vault / RAM disk → `$EDITOR` → shred + clean editor traces on exit) are
 > ready, including the optional `--clipboard` (dangerous, gated behind confirmation +
 > auto-clear).
@@ -55,8 +55,8 @@ the source for forks/tests).
 > `SECURITY.md`). Residual risk: one project key signs all five tools — see the ecosystem
 > [threat model](https://github.com/Di-kairos/paranoid-tools/blob/main/THREAT-MODEL.md).
 
-> The current public release is **v0.1.13** (signed, with `install.sh` + `SHA256SUMS`).
-> Pin it for reproducibility with `GHOSTDRAFT_VERSION=0.1.13` instead of `latest`.
+> The current public release is **v0.1.14** (signed, with `install.sh` + `SHA256SUMS`).
+> Pin it for reproducibility with `GHOSTDRAFT_VERSION=0.1.14` instead of `latest`.
 
 ## Usage
 

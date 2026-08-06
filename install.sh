@@ -34,7 +34,17 @@ elif [[ -n "${GHOSTDRAFT_VERSION:-}" ]]; then
 else
   BASE_URL="https://github.com/${REPO}/releases/latest/download"
 fi
-DEST="${GHOSTDRAFT_DEST:-/usr/local/bin/ghostdraft}"
+# Каталог установки. Умбрелла `paranoid-tools` ставит всё в ~/.local/bin (без sudo), а этот
+# установщик исторически — в /usr/local/bin. Если тул уже стоит из умбреллы, ставим РЯДОМ с ним:
+# иначе появляется вторая копия, и какая из них запустится, решает порядок в PATH — то есть
+# обновление молча не доезжает до пользователя. Явный GHOSTDRAFT_DEST всегда сильнее.
+if [[ -n "${GHOSTDRAFT_DEST:-}" ]]; then
+  DEST="$GHOSTDRAFT_DEST"
+elif [[ -e "$HOME/.local/bin/ghostdraft" ]]; then
+  DEST="$HOME/.local/bin/ghostdraft"
+else
+  DEST="/usr/local/bin/ghostdraft"
+fi
 
 # Временный каталог под загрузку; чистим в любом случае.
 TMP="$(mktemp -d)"
@@ -101,4 +111,9 @@ else
 fi
 
 echo "Установлено: $DEST"
+# Каталог вне PATH — молчать нельзя: пользователь решит, что установка не удалась.
+case ":${PATH}:" in
+  *":$(dirname "$DEST"):"*) : ;;
+  *) echo "ВНИМАНИЕ: $(dirname "$DEST") не в PATH — добавь его, иначе команда не найдётся." >&2 ;;
+esac
 echo "Дальше: открой эфемерный черновик 'ghostdraft new' (лучше — при открытом vault securetrash)."

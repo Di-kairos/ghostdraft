@@ -5,6 +5,17 @@
 
 ## [Unreleased]
 
+## [0.1.14] — 2026-08-06
+
+### Fixed
+- **Установщик больше не плодит вторую копию тула.** Умбрелла `paranoid-tools` ставит всё в
+  `~/.local/bin` (без sudo), а этот установщик по умолчанию — в `/usr/local/bin`. Кто ставил
+  обоими способами, получал две копии, и какая из них запустится, решал порядок в `PATH`:
+  обновление молча не доезжало до пользователя. Теперь при уже установленной копии в
+  `~/.local/bin` установка идёт поверх неё; явный `<TOOL>_DEST` по-прежнему сильнее всего.
+  Плюс предупреждение, если каталог установки не в `PATH`, — молчать здесь нельзя, иначе
+  успешная установка выглядит как несостоявшаяся.
+
 ## [0.1.13] — 2026-08-06
 
 ### Fixed
@@ -212,7 +223,8 @@
 - Real-device smoke на macOS: `new` создал RAM-диск, открыл редактор, по выходу сделал
   shred и detach (регрессия subshell-leak покрыта).
 
-[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.13...HEAD
+[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.14...HEAD
+[0.1.14]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.10...v0.1.11
