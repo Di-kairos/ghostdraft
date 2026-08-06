@@ -237,6 +237,13 @@ SH
   [[ "$output" == *"ZQ"* ]]
   [[ "$output" == *"nnoremap <F2> :wq<CR>"* ]]
   [[ "$output" == *"<F3> :q!<CR>"* ]]
+  # Блокнот обязан открываться ГОТОВЫМ К ПЕЧАТИ. vim стартует в normal-режиме, где буквы —
+  # это команды: живой пользователь печатал, текст не появлялся, внизу висел огрызок
+  # недобранной команды. Плюс `-N`: без ~/.vimrc vim уходит в compatible, где Backspace
+  # и стрелки в insert ведут себя не так, как ждёт не-vim-пользователь.
+  [[ "$output" == *"startinsert"* ]]
+  [[ "$output" == *"-N"* ]]
+  [[ "$output" == *"backspace=indent,eol,start"* ]]
   # vim принимает МАКСИМУМ 10 `-c`; на одиннадцатом он отказывается стартовать целиком,
   # то есть блокнот не открывается вовсе. Стаб-vim этого не покажет — сторожим счётом.
   n_c="$(printf '%s\n' $output | grep -c -- '^-c$')"
@@ -439,5 +446,20 @@ SH
   chmod +x "$bin/mount"
   run env PATH="$bin:$PATH" bash -c "source '$SCRIPT'; _is_mounted_writable '$work/Volumes/SecretVault' && echo YES || echo NO"
   [[ "$output" == *"YES"* ]]
+  rm -rf "$work"
+}
+
+@test "real vim: with these flags typed text actually lands in the file" {
+  # Стаб-редактор не может показать, В КАКОМ РЕЖИМЕ откроется настоящий vim — а именно на
+  # этом застрял живой пользователь. Проигрываем клавиши в настоящий vim теми же флагами:
+  # печатаем текст и жмём Ctrl-D. Без `startinsert` файл остался бы пустым.
+  command -v vim >/dev/null 2>&1 || skip "vim not installed"
+  work="$(mktemp -d)"
+  printf 'secret note\004' > "$work/keys"      # текст + Ctrl-D
+  : > "$work/draft"
+  TERM=dumb vim -N -i NONE \
+    -c 'execute "inoremap <silent> <C-d> <Esc>:wq<CR>"' \
+    -c 'startinsert' -s "$work/keys" "$work/draft" >/dev/null 2>&1 || true
+  [ "$(cat "$work/draft")" = "secret note" ]
   rm -rf "$work"
 }

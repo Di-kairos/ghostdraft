@@ -5,6 +5,21 @@
 
 ## [Unreleased]
 
+## [0.1.16] — 2026-08-06
+
+### Fixed
+- **Блокнот открывается готовым к печати.** vim стартует в normal-режиме, где буквы — это
+  команды: живой пользователь печатал, текст не появлялся, а внизу висел огрызок недобранной
+  команды (`f` ждёт следующий символ). Выглядело как «писать не могу». Теперь `startinsert` —
+  курсор сразу в тексте. Плюс `-N`: без `~/.vimrc` vim уходит в compatible-режим, где Backspace
+  и стрелки в режиме вставки ведут себя не так, как ждёт любой не-vim-пользователь.
+  `showmode` показывает `-- INSERT --`, чтобы режим был виден.
+
+### Внутреннее
+- Тест проигрывает клавиши в НАСТОЯЩИЙ vim (печать + `Ctrl-D`) и проверяет, что текст доехал
+  до файла. Стаб-редактор в принципе не может показать, в каком режиме откроется настоящий
+  редактор, — а застревал живой пользователь именно на этом.
+
 ## [0.1.15] — 2026-08-06
 
 ### Fixed
@@ -244,7 +259,8 @@
 - Real-device smoke на macOS: `new` создал RAM-диск, открыл редактор, по выходу сделал
   shred и detach (регрессия subshell-leak покрыта).
 
-[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.15...HEAD
+[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.16...HEAD
+[0.1.16]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.12...v0.1.13

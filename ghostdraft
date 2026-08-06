@@ -13,7 +13,7 @@
 # Полное ядро — в следующих паках; см. README «Scope & limitations».
 set -euo pipefail
 
-VERSION="0.1.15"
+VERSION="0.1.16"
 
 # === BEGIN vendored common (pin: 221f2c7fbed10a220b832aab9264e6665581b514) ===
 # shellcheck shell=bash
@@ -487,10 +487,17 @@ cmd_new() {
       # одиннадцатом просто отказывается стартовать — то есть блокнот не откроется вовсе.
       # Поэтому все маппинги живут в ОДНОМ `-c`: `|` нельзя ставить между самими :map
       # (он уедет в правую часть маппинга), а между `execute "…"` — можно.
-      _ed=(vim -i NONE
-        -c 'set laststatus=2'
+      # `-N` + `startinsert`: блокнот открывается ГОТОВЫМ К ПЕЧАТИ. vim стартует в
+      # normal-режиме, где буквы — это команды: человек печатает, текст не появляется, а
+      # внизу висит огрызок недобранной команды (`f` ждёт следующий символ) — именно так
+      # выглядело «писать не могу». Без ~/.vimrc vim ещё и уходит в compatible-режим, где
+      # Backspace и стрелки в insert ведут себя не как ждёт любой не-vim-пользователь;
+      # `-N` это снимает. `showmode` показывает `-- INSERT --`, чтобы режим был виден.
+      _ed=(vim -N -i NONE
+        -c 'set laststatus=2 backspace=indent,eol,start showmode'
         -c 'set statusline=\ \ Ctrl-D\ =\ save\ &\ exit\ \ \ \ Ctrl-X\ =\ discard\ \ \ \ works\ in\ any\ mode\ \ \ \ (Esc\ then\ ZZ\ /\ ZQ\ also\ work)'
-        -c 'execute "nnoremap <silent> <C-d> :wq<CR>" | execute "inoremap <silent> <C-d> <Esc>:wq<CR>" | execute "vnoremap <silent> <C-d> <Esc>:wq<CR>" | execute "nnoremap <silent> <C-x> :q!<CR>" | execute "inoremap <silent> <C-x> <Esc>:q!<CR>" | execute "vnoremap <silent> <C-x> <Esc>:q!<CR>" | execute "nnoremap q <Nop>" | execute "nnoremap <F2> :wq<CR>" | execute "inoremap <F2> <Esc>:wq<CR>" | execute "nnoremap <F3> :q!<CR>" | execute "inoremap <F3> <Esc>:q!<CR>"')
+        -c 'execute "nnoremap <silent> <C-d> :wq<CR>" | execute "inoremap <silent> <C-d> <Esc>:wq<CR>" | execute "vnoremap <silent> <C-d> <Esc>:wq<CR>" | execute "nnoremap <silent> <C-x> :q!<CR>" | execute "inoremap <silent> <C-x> <Esc>:q!<CR>" | execute "vnoremap <silent> <C-x> <Esc>:q!<CR>" | execute "nnoremap q <Nop>" | execute "nnoremap <F2> :wq<CR>" | execute "inoremap <F2> <Esc>:wq<CR>" | execute "nnoremap <F3> :q!<CR>" | execute "inoremap <F3> <Esc>:q!<CR>"'
+        -c 'startinsert')
     else
       _ed=(nano)
     fi
