@@ -13,7 +13,7 @@
 # Полное ядро — в следующих паках; см. README «Scope & limitations».
 set -euo pipefail
 
-VERSION="0.1.14"
+VERSION="0.1.15"
 
 # === BEGIN vendored common (pin: 221f2c7fbed10a220b832aab9264e6665581b514) ===
 # shellcheck shell=bash
@@ -235,8 +235,8 @@ EOF
     ru:new_residue) printf 'Черновик удалён, editor-бэкапы вычищены. НЕ могу вычистить: scrollback терминала, swap ОС и ~/.viminfo (регистры/последний yank) — это на тебе.' ;;
     en:new_needs_tty) printf 'ghostdraft opens a text editor and needs an interactive terminal. Open a real terminal tab (Terminal / iTerm / Warp) and run it there — NOT through a pipe, a non-interactive runner, or an embedded command box (the editor would open but never receive your keystrokes).' ;;
     ru:new_needs_tty) printf 'ghostdraft открывает текстовый редактор и требует интерактивный терминал. Открой настоящую вкладку терминала (Terminal / iTerm / Warp) и запусти там — НЕ через пайп, не в неинтерактивном раннере и не во встроенном командном поле (редактор откроется, но не получит нажатия клавиш).' ;;
-    en:new_warp_hint) printf 'Warp detected. Its AI popup ("Use agent / Dismiss") and its F-key bindings can steal keystrokes from the editor — if typing does nothing, press Esc to dismiss the popup, then click into the editor. To exit vim: Esc then ZZ (save) or ZQ (discard). If it stays stuck, use Terminal.app or iTerm instead.' ;;
-    ru:new_warp_hint) printf 'Обнаружен Warp. Его AI-попап («Use agent / Dismiss») и биндинги F-клавиш могут перехватывать ввод у редактора — если печать не работает, нажми Esc чтобы закрыть попап, затем кликни в редактор. Выход из vim: Esc, потом ZZ (сохранить) или ZQ (отменить). Если всё равно застрял — открой Terminal.app или iTerm.' ;;
+    en:new_warp_hint) printf 'Warp detected. Its AI popup ("Use agent / Dismiss") and its F-key bindings can steal keystrokes from the editor — if typing does nothing, press Esc to dismiss the popup, then click into the editor. To leave the editor: Ctrl-D saves and exits, Ctrl-X exits without saving. Both work whether you are typing or not — no Esc needed first.' ;;
+    ru:new_warp_hint) printf 'Обнаружен Warp. Его AI-попап («Use agent / Dismiss») и биндинги F-клавиш могут перехватывать ввод у редактора — если печать не работает, нажми Esc чтобы закрыть попап, затем кликни в редактор. Выйти из редактора: Ctrl-D — сохранить и выйти, Ctrl-X — выйти без сохранения. Обе работают из любого режима, Esc заранее жать не нужно.' ;;
     en:clip_danger) printf 'DANGER: --clipboard copies the secret to the system clipboard. Clipboard managers may keep a copy, and iCloud Universal Clipboard syncs it to your other devices. Auto-clear cannot undo a copy already taken.' ;;
     ru:clip_danger) printf 'ОПАСНО: --clipboard кладёт секрет в системный буфер. Clipboard-менеджеры могут сохранить копию, а iCloud Universal Clipboard синкает его на твои другие устройства. Авто-очистка НЕ отменяет уже снятую копию.' ;;
     en:clip_confirm) printf 'Copy to clipboard anyway?' ;;
@@ -417,7 +417,7 @@ cmd_new() {
   fi
   # Warp — настоящий TTY (guard выше проходит), но его AI-попап («Use agent») перехватывает
   # фокус, а F-клавиши он биндит под себя → ввод не доходит до редактора, newbie застревает.
-  # Не фатально: печатаем разовую подсказку (Esc закрыть попап / выход Esc→ZZ/ZQ / уйти в iTerm).
+  # Не фатально: печатаем разовую подсказку (Esc закрывает попап; выход из редактора — Ctrl-D / Ctrl-X).
   if [[ "${TERM_PROGRAM:-}" == "WarpTerminal" ]]; then
     warn "$(t new_warp_hint)"
   fi
@@ -450,27 +450,47 @@ cmd_new() {
   # Редактор: уважаем $EDITOR (можно с флагами, напр. "vim -i NONE"); иначе дефолт —
   # `vim -i NONE`: мягкий перенос длинных строк (ключ не уезжает за край и не рвётся
   # вставленными переводами строк) + `-i NONE` отключает ~/.viminfo, который иначе мы
-  # вычистить НЕ можем (см. new_residue). Нет vim — nano. read -ra безопасно бьёт $EDITOR на слова.
+  # вычистить НЕ можем (см. new_residue). Нет vim — nano.
+  #
+  # Разбор $EDITOR: сначала пробуем как ЦЕЛЫЙ путь, и только потом бьём на слова. Путь с
+  # пробелом — норма на macOS (`/Applications/Visual Studio Code.app/…/code`), а `read -ra`
+  # рвал его на куски, и редактор не запускался вовсе. `eval` здесь сознательно НЕ
+  # используем: он выполнил бы подстановки внутри переменной окружения (`$(…)`), а это уже
+  # другой класс доверия, чем «запустить названную программу».
   local -a _ed=()
-  [[ -n "${EDITOR:-}" ]] && read -ra _ed <<<"$EDITOR"
+  if [[ -n "${EDITOR:-}" ]]; then
+    if [[ -x "$EDITOR" ]] || command -v "$EDITOR" >/dev/null 2>&1; then
+      _ed=("$EDITOR")
+    else
+      read -ra _ed <<<"$EDITOR"
+    fi
+  fi
   # Пусто/пробелы в $EDITOR (read -ra даёт пустой массив) → дефолт, не пытаемся
   # исполнить сам черновик как команду.
   if [[ ${#_ed[@]} -eq 0 ]]; then
     if command -v vim >/dev/null 2>&1; then
-      # Дружелюбный дефолтный vim: всегда видимая подсказка выхода (statusline). КЛАВИАТУРНЫЙ
-      # путь ведёт (Esc→ZZ/ZQ, потом :wq/:q!), потому что F-клавиши терминалы (Warp) часто
-      # перехватывают и до vim они не доходят — newbie застревал именно так. F2/F3 оставлены
-      # как бонус, если терминал их пропускает. `-i NONE` — та же приватность (без ~/.viminfo).
-      # Применяем ТОЛЬКО к дефолту: свой $EDITOR пользователя не трогаем.
+      # Дружелюбный дефолтный vim. Выход — ОДНА клавиша, работающая из ЛЮБОГО режима:
+      # Ctrl-D сохранить и выйти, Ctrl-X выйти без сохранения. Так сделано потому, что все
+      # прежние пути ломались о живого пользователя: F-клавиши перехватывает терминал (Warp),
+      # а `ZZ`/`ZQ` работают только в normal-режиме — из режима вставки они просто печатаются
+      # в текст, и редактор выглядит зависшим. Ctrl-аккорд терминалы пропускают, и он
+      # не зависит от того, в каком режиме человек оказался.
+      # `q` в normal-режиме отключён намеренно: промах по `ZQ` включал запись макроса
+      # (`recording @q` в статусбаре), после чего редактор перестаёт отвечать на привычное —
+      # ровно этот тупик и ловил новичка. Макросы в блокноте для эфемерной заметки не нужны.
+      # F2/F3 и ZZ/ZQ/:wq/:q! оставлены как есть — кто их знает, теряет ничего.
+      # `-i NONE` — та же приватность (без ~/.viminfo). Применяем ТОЛЬКО к дефолту:
+      # свой $EDITOR пользователя не трогаем.
       # NB: в statusline нельзя сырой `|` (vim примет за разделитель команд) — поэтому разделители
       # пробелами; пробелы экранируем `\ ` (требование :set statusline).
+      # NB2: vim принимает МАКСИМУМ 10 аргументов `-c` («Too many "+command"») и на
+      # одиннадцатом просто отказывается стартовать — то есть блокнот не откроется вовсе.
+      # Поэтому все маппинги живут в ОДНОМ `-c`: `|` нельзя ставить между самими :map
+      # (он уедет в правую часть маппинга), а между `execute "…"` — можно.
       _ed=(vim -i NONE
         -c 'set laststatus=2'
-        -c 'set statusline=\ \ Esc\ then\ ZZ\ =\ save\ &\ exit\ \ \ \ ZQ\ =\ discard\ \ \ \ (or\ :wq\ /\ :q!\ \ \ F2/F3\ if\ your\ terminal\ allows)'
-        -c 'nnoremap <F2> :wq<CR>'
-        -c 'inoremap <F2> <Esc>:wq<CR>'
-        -c 'nnoremap <F3> :q!<CR>'
-        -c 'inoremap <F3> <Esc>:q!<CR>')
+        -c 'set statusline=\ \ Ctrl-D\ =\ save\ &\ exit\ \ \ \ Ctrl-X\ =\ discard\ \ \ \ works\ in\ any\ mode\ \ \ \ (Esc\ then\ ZZ\ /\ ZQ\ also\ work)'
+        -c 'execute "nnoremap <silent> <C-d> :wq<CR>" | execute "inoremap <silent> <C-d> <Esc>:wq<CR>" | execute "vnoremap <silent> <C-d> <Esc>:wq<CR>" | execute "nnoremap <silent> <C-x> :q!<CR>" | execute "inoremap <silent> <C-x> <Esc>:q!<CR>" | execute "vnoremap <silent> <C-x> <Esc>:q!<CR>" | execute "nnoremap q <Nop>" | execute "nnoremap <F2> :wq<CR>" | execute "inoremap <F2> <Esc>:wq<CR>" | execute "nnoremap <F3> :q!<CR>" | execute "inoremap <F3> <Esc>:q!<CR>"')
     else
       _ed=(nano)
     fi

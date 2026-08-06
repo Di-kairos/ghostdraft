@@ -153,6 +153,19 @@ SH
   rm -rf "$work"
 }
 
+@test "$EDITOR with a space in its path still opens (not split into words)" {
+  # На macOS путь с пробелом — норма (`/Applications/Visual Studio Code.app/…/code`).
+  # Побитый на слова $EDITOR не запускался вовсе: черновик открыть было нечем.
+  work="$(mktemp -d)"; mkdir -p "$work/my editors"; ed="$work/my editors/ed"
+  _fake_editor "$ed"
+  export GD_EDITED_PATH="$work/edited" GD_EDITED_MODE="$work/mode"
+  run env GHOSTDRAFT_DIR="$work/draftdir" EDITOR="$ed" bash "$SCRIPT" new
+  [ "$status" -eq 0 ]
+  edited="$(cat "$work/edited")"
+  [[ "$edited" == "$work/draftdir/"* ]]
+  rm -rf "$work"
+}
+
 @test "new shreds the draft file on exit (nothing left)" {
   work="$(mktemp -d)"; ed="$work/ed"; _fake_editor "$ed"
   export GD_EDITED_PATH="$work/edited" GD_EDITED_MODE="$work/mode"
@@ -192,7 +205,7 @@ SH
   rm -rf "$work"
 }
 
-@test "default vim shows a simple exit (F2 save, F3 discard, always-visible statusline)" {
+@test "default vim exits with one key from any mode (Ctrl-D save, Ctrl-X discard)" {
   work="$(mktemp -d)"; bin="$work/bin"; mkdir -p "$bin"
   cat > "$bin/vim" <<'SH'
 #!/usr/bin/env bash
@@ -205,16 +218,29 @@ SH
   run env -u EDITOR PATH="$bin:$PATH" GHOSTDRAFT_DIR="$work/d" bash "$SCRIPT" new
   [ "$status" -eq 0 ]
   run cat "$VIM_ARGS"
-  # всегда видимая подсказка + КЛАВИАТУРНЫЙ путь ведёт (F-клавиши в Warp не проходят →
-  # newbie застревал): statusline должен показывать Esc→ZZ/ZQ, не только F2/F3.
+  # Выход обязан работать ИЗ ЛЮБОГО РЕЖИМА: `ZZ`/`ZQ` живут только в normal, из режима
+  # вставки они просто печатаются в текст, и редактор выглядит зависшим; F-клавиши
+  # перехватывает терминал (Warp). Поэтому Ctrl-аккорд + маппинг в normal И insert.
   [[ "$output" == *"laststatus=2"* ]]
   [[ "$output" == *"statusline="* ]]
-  [[ "$output" == *"Esc"* ]]
+  [[ "$output" == *"Ctrl-D"* ]]
+  [[ "$output" == *"Ctrl-X"* ]]
+  [[ "$output" == *"nnoremap <silent> <C-d> :wq<CR>"* ]]
+  [[ "$output" == *"inoremap <silent> <C-d> <Esc>:wq<CR>"* ]]
+  [[ "$output" == *"nnoremap <silent> <C-x> :q!<CR>"* ]]
+  [[ "$output" == *"inoremap <silent> <C-x> <Esc>:q!<CR>"* ]]
+  # Промах по `ZQ` включал запись макроса (`recording @q`) — редактор переставал отвечать
+  # на привычное, и это выглядело как зависание. Записи макросов в блокноте быть не должно.
+  [[ "$output" == *"nnoremap q <Nop>"* ]]
+  # Старые пути не сломаны — кто их знает, не теряет ничего.
   [[ "$output" == *"ZZ"* ]]
   [[ "$output" == *"ZQ"* ]]
   [[ "$output" == *"nnoremap <F2> :wq<CR>"* ]]
-  [[ "$output" == *"inoremap <F2> <Esc>:wq<CR>"* ]]
   [[ "$output" == *"<F3> :q!<CR>"* ]]
+  # vim принимает МАКСИМУМ 10 `-c`; на одиннадцатом он отказывается стартовать целиком,
+  # то есть блокнот не открывается вовсе. Стаб-vim этого не покажет — сторожим счётом.
+  n_c="$(printf '%s\n' $output | grep -c -- '^-c$')"
+  [ "$n_c" -le 10 ]
   rm -rf "$work"
 }
 
