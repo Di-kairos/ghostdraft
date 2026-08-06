@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+## [0.1.17] — 2026-08-06
+
+### Fixed
+- **Установщик Windows работает и под штатным Windows PowerShell 5.1.** Аргументы верификатору
+  подписи собирались через `ProcessStartInfo.ArgumentList`, которого в .NET Framework нет, —
+  а 5.1 это ровно тот шелл, в котором выполняют однострочник из README. Установка падала бы на
+  шаге проверки подписи. Добавлен запасной путь через строку аргументов с корректным
+  квотированием (кавычки экранируются, хвостовые обратные слэши удваиваются).
+
 ## [0.1.16] — 2026-08-06
 
 ### Fixed
@@ -259,7 +268,8 @@
 - Real-device smoke на macOS: `new` создал RAM-диск, открыл редактор, по выходу сделал
   shred и detach (регрессия subshell-leak покрыта).
 
-[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.16...HEAD
+[Unreleased]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.17...HEAD
+[0.1.17]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/Di-kairos/ghostdraft/compare/v0.1.13...v0.1.14
