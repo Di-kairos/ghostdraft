@@ -201,7 +201,7 @@ SH
   run env -u EDITOR PATH="$bin:$PATH" GHOSTDRAFT_DIR="$work/d" bash "$SCRIPT" new
   [ "$status" -eq 0 ]
   run cat "$VIM_ARGS"
-  [[ "$output" == "-i NONE "* ]]
+  [[ "$output" == "-N -i NONE "* ]]
   rm -rf "$work"
 }
 
@@ -264,7 +264,7 @@ SH
   run env PATH="$bin:$PATH" GHOSTDRAFT_DIR="$work/d" EDITOR="   " bash "$SCRIPT" new
   [ "$status" -eq 0 ]
   run cat "$VIM_ARGS"
-  [[ "$output" == "-i NONE "* ]]
+  [[ "$output" == "-N -i NONE "* ]]
   rm -rf "$work"
 }
 
