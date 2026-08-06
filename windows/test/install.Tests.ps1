@@ -59,6 +59,16 @@ Describe 'install.ps1 integrity gate' {
 }
 
 Describe 'install.ps1 signature gate' {
+    It 'never pipes the signed data into the verifier (bytes must reach it unchanged)' {
+        # Конвейер PowerShell перекодирует текст (BOM, CRLF) и дописывает перевод строки, поэтому
+        # верификатор увидел бы НЕ те байты, что подписаны: валидная подпись читается как
+        # «incorrect signature», и fail-closed рубит установку с настоящего релиза. Так уже
+        # ломался seedsplit. Канон — сырой поток файла в stdin через ProcessStartInfo.
+        $src = Get-Content -Raw -LiteralPath $script:InstallScript
+        $src | Should -Match 'ProcessStartInfo'
+        $src | Should -Not -Match '(?m)Get-Content[^\r\n]*\|\s*&'
+    }
+
     BeforeEach {
         $script:Work = Join-Path ([System.IO.Path]::GetTempPath()) ("gd_sig_" + [Guid]::NewGuid().ToString('N'))
         $script:Release = Join-Path $script:Work 'release'
