@@ -93,7 +93,11 @@ Describe 'install.ps1 signature gate' {
 
         # Тестовый ed25519-ключ + подпись SHA256SUMS (namespace 'file', как в release.yml).
         $script:Key = Join-Path $script:Work 'signing_key'
-        & ssh-keygen -t ed25519 -N '' -C 'gd-test' -f $script:Key *> $null
+        # Windows PowerShell 5.1 теряет пустой аргумент при вызове нативной программы:
+        # `-N ''` до ssh-keygen не доходит, тот уходит спрашивать парольную фразу, ключ
+        # не создаётся и дальше падает Get-Content на .pub. В дочернем pwsh пустая строка
+        # доезжает как есть.
+        & pwsh -NoProfile -Command "& ssh-keygen -t ed25519 -N '' -C 'gd-test' -f '$($script:Key)'" *> $null
         Push-Location $script:Release
         & ssh-keygen -Y sign -f $script:Key -n file 'SHA256SUMS' *> $null
         Pop-Location
