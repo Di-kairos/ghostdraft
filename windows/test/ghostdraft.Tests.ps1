@@ -1,4 +1,4 @@
-# Pester 5 — логика ghostdraft.ps1 (Windows-порт). Дот-сорс под ST_NO_MAIN=1: определяет
+﻿# Pester 5 — логика ghostdraft.ps1 (Windows-порт). Дот-сорс под ST_NO_MAIN=1: определяет
 # функции, не запуская диспетчер. ghostdraft трогает внешний мир (editor/shred/clipboard),
 # поэтому эти примитивы МОКАЮТСЯ: тест проверяет оркестровку (выбор каталога, порядок,
 # shred-в-finally, --clipboard-гейт), не запуская notepad и не стирая реальные файлы.

@@ -1,4 +1,4 @@
-# Pester 5 — install.ps1 (Windows-порт ghostdraft). Проверяем integrity-gate + signature-gate
+﻿# Pester 5 — install.ps1 (Windows-порт ghostdraft). Проверяем integrity-gate + signature-gate
 # без сети: GHOSTDRAFT_BASE_URL указывает на локальный каталог-«релиз», установка идёт во
 # временный каталог, правка PATH отключена. Покрытие: happy-path, провал на расхождении хеша,
 # провал при отсутствии записи в SHA256SUMS, и полный набор для подписи релиза (fail-closed).

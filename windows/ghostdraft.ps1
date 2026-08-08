@@ -1,4 +1,4 @@
-# ghostdraft.ps1 — эфемерный черновик для чувствительного текста (Paranoid Tools),
+﻿# ghostdraft.ps1 — эфемерный черновик для чувствительного текста (Paranoid Tools),
 # Windows-порт (BETA). Зеркало macOS-версии (bash). Baseline: Windows PowerShell 5.1.
 #
 # Написать/просмотреть seed/пароль/ключ так, чтобы после закрытия следов осталось как
